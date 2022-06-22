@@ -1,4 +1,4 @@
-package filer
+package gopackages
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	selective "github.com/Powerisinschool/go-packages/select"
+	selective "github.com/Powerisinschool/go-packages"
 )
 
 type FileOptions struct {

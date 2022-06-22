@@ -1,4 +1,4 @@
-package selective
+package gopackages
 
 import (
 	"errors"
