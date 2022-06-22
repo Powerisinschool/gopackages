@@ -5,8 +5,6 @@ import (
 	"io/fs"
 	"log"
 	"os"
-
-	"github.com/Powerisinschool/gopackages/select"
 )
 
 type FileOptions struct {
@@ -31,7 +29,7 @@ func SelectFile(rootPath string, options ...FileOptions) (string, fs.DirEntry, e
 		files = append(files, file.Name())
 	}
 
-	i, err := gopackages.Select(files)
+	i, err := Select(files)
 	if err != nil {
 		log.Fatal(err)
 	}
