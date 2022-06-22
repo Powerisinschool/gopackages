@@ -1,4 +1,4 @@
-module go-packages
+module github.com/Powerisinschool/go-packages
 
 go 1.18
 

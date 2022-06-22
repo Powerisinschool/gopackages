@@ -2,10 +2,11 @@ package filer
 
 import (
 	"fmt"
-	selective "go-packages/select"
 	"io/fs"
 	"log"
 	"os"
+
+	selective "github.com/Powerisinschool/go-packages/select"
 )
 
 type FileOptions struct {
@@ -19,22 +20,33 @@ func SelectFile(rootPath string, options ...FileOptions) (string, fs.DirEntry, e
 	}
 	var files []string
 	for _, file := range filesDir {
+		info, err := os.Stat(rootPath + file.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		if info.IsDir() {
+			files = append(files, file.Name()+"/")
+			continue
+		}
 		files = append(files, file.Name())
 	}
-	
-	i, _ := selective.Select(files)
+
+	i, err := selective.Select(files)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(filesDir[i].Name())
 	info, err := os.Stat(rootPath + filesDir[i].Name())
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	fmt.Println(len(options))
 	if len(options) > 0 {
 		fmt.Println(options[0].Filter)
 	}
 
-	if(info.IsDir()) {
+	if info.IsDir() {
 		return SelectFile(rootPath + filesDir[i].Name() + "/")
 	} else {
 		return filesDir[i].Name(), filesDir[i], nil

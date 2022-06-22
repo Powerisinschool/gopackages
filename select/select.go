@@ -13,14 +13,15 @@ import (
 const defaultRatio float64 = 7.0 / 3.0 // The terminal's default cursor width/height ratio
 
 var (
-	width int
-	height int
+	width    int
+	height   int
 	xwritten []int
 	ywritten []int
 	// whratio float64
 )
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
+	y += 2
 	for _, c := range msg {
 		if intInSlice(x, xwritten) && intInSlice(y, ywritten) {
 			continue
@@ -30,15 +31,47 @@ func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
 	}
 }
 
-func tbprintrev(x, y int, fg, bg termbox.Attribute, msg string) {
-	x -= len(msg)
+func tbprintcenter(y int, fg, bg termbox.Attribute, msg string) {
+	x := int((width / 2) - (len(msg) / 2))
 	for _, c := range msg {
+		if intInSlice(x, xwritten) && intInSlice(y, ywritten) {
+			continue
+		}
 		termbox.SetCell(x, y, c, fg, bg)
 		x++
 	}
 }
 
-func Select(options []string) (int, error) {
+func tbprintrev(y int, fg, bg termbox.Attribute, msg string) {
+	x := width - len(msg) - 1
+	for _, c := range msg {
+		if intInSlice(x, xwritten) && intInSlice(y, ywritten) {
+			continue
+		}
+		termbox.SetCell(x, y, c, fg, bg)
+		x++
+	}
+}
+
+type SelectOptionsStruct struct {
+	DefaultSelection int
+}
+
+func Select(options []string, selectOptions ...SelectOptionsStruct) (int, error) {
+
+	selected := -1
+	selectedDefault := false
+
+	// throw error if selectOptions is included more than once
+	if len(selectOptions) > 1 {
+		return 0, errors.New("only one select option parameter is valid")
+	}
+
+	if len(selectOptions) > 0 {
+		selected = selectOptions[0].DefaultSelection
+		selectedDefault = true
+	}
+
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -47,15 +80,17 @@ func Select(options []string) (int, error) {
 
 	termbox.SetOutputMode(termbox.Output256)
 
-	selected := 0
-
 	termbox.SetOutputMode(termbox.Output256)
 	draw(options, selected)
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyEsc || ev.Ch == 'q' || ev.Key == termbox.KeyCtrlC {
-				return 0, errors.New("closed unexpectedly")
+				if selected != -1 && selectedDefault {
+					return selected, nil
+				} else {
+					return -1, errors.New("selection terminated by user")
+				}
 			}
 			if ev.Key == termbox.KeyArrowRight && len(options)-1 > selected {
 				selected++
@@ -66,6 +101,9 @@ func Select(options []string) (int, error) {
 				draw(options, selected)
 			}
 			if ev.Key == termbox.KeyEnter {
+				if selected == -1 {
+					return -1, errors.New("nothing has been selected")
+				}
 				return selected, nil
 			}
 		case termbox.EventResize:
@@ -84,6 +122,8 @@ func draw(options []string, selected int) {
 
 	width, height, _ = canvasSize()
 
+	tbprintcenter(0, termbox.ColorDefault, termbox.ColorDefault, "Select a package")
+
 	for i, str := range options {
 		if i == selected {
 			tbprint(0, i, termbox.ColorWhite, termbox.ColorDefault, "> ")
@@ -94,8 +134,8 @@ func draw(options []string, selected int) {
 	}
 	closeMsg := "To close, press the 'ESC' key"
 	helpMsg := "Use the left and right arrow keys to select an option"
-	tbprintrev(width-1, height-1, termbox.ColorWhite, termbox.ColorDefault, closeMsg)
-	if width-2 > len(closeMsg) + len(helpMsg) { // '2' is subtracted for adequate spacing between sentences
+	tbprintrev(height-1, termbox.ColorWhite, termbox.ColorDefault, closeMsg)
+	if width-2 > len(closeMsg)+len(helpMsg) { // '2' is subtracted for adequate spacing between sentences
 		tbprint(0, height-1, termbox.ColorWhite, termbox.ColorDefault, helpMsg)
 	} else {
 		tbprint(0, height-2, termbox.ColorWhite, termbox.ColorDefault, helpMsg)
@@ -119,10 +159,10 @@ func canvasSize() (int, int, float64) {
 }
 
 func intInSlice(a int, list []int) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

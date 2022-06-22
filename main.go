@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-packages/filer"
+	"github.com/Powerisinschool/go-packages/filer"
 	"log"
 )
 
