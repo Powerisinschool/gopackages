@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	selective "github.com/Powerisinschool/go-packages"
+	selective "github.com/Powerisinschool/gopackages"
 )
 
 type FileOptions struct {
