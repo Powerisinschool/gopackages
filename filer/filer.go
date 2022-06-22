@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	selective "github.com/Powerisinschool/gopackages"
+	"github.com/Powerisinschool/gopackages/select"
 )
 
 type FileOptions struct {
@@ -31,7 +31,7 @@ func SelectFile(rootPath string, options ...FileOptions) (string, fs.DirEntry, e
 		files = append(files, file.Name())
 	}
 
-	i, err := selective.Select(files)
+	i, err := gopackages.Select(files)
 	if err != nil {
 		log.Fatal(err)
 	}
